@@ -4,15 +4,14 @@ from wxpy import *
 from pymongo import MongoClient
 from pymongo.collection import Collection
 from xianyu import return_result, loop_reply
-
-
-bot = Bot(cache_path = True)
-friend_list = bot.friends()
-
+import threading
 client = MongoClient() # 里面什么都不填的话， 默认localhost, 27017
 killer_test = client['killer_test']
 config_list = Collection(killer_test, 'config_list')
 
+bot = Bot(cache_path = True)
+print('Welcom to Killer\'s World')
+friend_list = bot.friends()
 # 这里配置我们想要什么信息 
 # msg.text.startswith('搜索关键词：') 这个写在判断语句里， 也是我们想要的信息
 WORD_DICT = {
@@ -63,9 +62,7 @@ def auto_reply(msg):
 
         # 如果用户会回复的是1 就说明要 确认 搜索关键词
         if msg.text == '1':
-            print('am in msg.text == 1')
             user = config_list.find_one({'user_name':msg.sender.name, 'is_sure': 1, 'is_crawled': True})
-            print(' hi am here')
             if user is not None:
                 return f'你之前提交过配置 配置的信息如下：\n搜索关键词：{"、".join(user["query_list"])}\n如需重新配置请回复 2'
             # else 证明数据库里没有这个用户的爬取数据 则判断用户是否已经设置过一次
@@ -103,14 +100,18 @@ def auto_accept_friends(msg):
 
 # 每日自动发送
 # 测试用的 每隔5分钟。。。 
-while True:
-    for user in config_list.find({}):
-        time_now = datetime.datetime.now()
-        if user['is_crawled'] == True and  time_now > user['crawled_time'] + datetime.timedelta(minutes=5):
-        # if user['is_crawled'] == True and user['crawled_time'] + datetime.timedelta(hours=24) > time_now:
-            friend = bot.friends().search(name=user['user_name'])[0]
-            loop_reply(friend, user, config_list)
+def _main():
+    while True:
+        for user in config_list.find({}):
+            time_now = datetime.datetime.now()
+            if user['is_crawled'] == True and time_now > user['crawled_time'] + datetime.timedelta(minutes=5):
+            # if user['is_crawled'] == True and user['crawled_time'] + datetime.timedelta(hours=24) > time_now:
+                friend = bot.friends().search(name=user['user_name'])[0]
+                loop_reply(friend, user, config_list)
+            # 这里设计有缺陷 
         time.sleep(60)
+t = threading.Thread(target=_main)
+t.start()
 
 embed()
 # bot.join()

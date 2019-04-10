@@ -87,6 +87,7 @@ def return_result(user, msg, config_list):
             for data in data_list:
                 msg.reply(f"{query} 新发现一个盗版商品-{data['title']}-{data['href']}\napp链接为:{data['app_link']}")
                 time.sleep(1)
+            msg.reply('-----------------------')
         else:
             msg.reply('没有找到相关的信息 %s' %query)
     msg.reply('回复完毕， 请查看！')
@@ -125,6 +126,9 @@ def parse_page(url, data_list, query, user):
                                
 
 def loop_reply(friend, user, config_list):
+	# 更新用户 是否已经爬取 是 。这里不保存信息的话也可以从数据库直接删除
+    config_list.update({'user_name':user['user_name'], 'is_sure': 1, 'is_crawled': True},{"$set":{'crawled_time':datetime.datetime.now()}})
+
     query_list = user['query_list']
     print(query_list)           
     # query = '麻瓜编程'
@@ -143,7 +147,5 @@ def loop_reply(friend, user, config_list):
         else:
             friend.send('没有找到相关的信息 %s' %query)
     friend.send('回复完毕， 请查看！')
-    # 更新用户 是否已经爬取 是 。这里不保存信息的话也可以从数据库直接删除
-    config_list.update({'user_name':user['user_name'], 'is_sure': 1, 'is_crawled': True},{"$set":{'crawled_time':datetime.datetime.now()}})
-		
+    	
 

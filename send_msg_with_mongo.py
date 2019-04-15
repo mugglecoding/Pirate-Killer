@@ -104,12 +104,14 @@ def _main():
     while True:
         for user in config_list.find({}):
             time_now = datetime.datetime.now()
-            if user['is_crawled'] == True and time_now > user['crawled_time'] + datetime.timedelta(minutes=5):
+            if user['is_crawled'] == True and time_now > user['crawled_time'] + datetime.timedelta(minutes=1):
             # if user['is_crawled'] == True and user['crawled_time'] + datetime.timedelta(hours=24) > time_now:
                 friend = bot.friends().search(name=user['user_name'])[0]
                 loop_reply(friend, user, config_list)
             # 这里设计有缺陷 
         time.sleep(60)
+
+        
 t = threading.Thread(target=_main)
 t.start()
 
